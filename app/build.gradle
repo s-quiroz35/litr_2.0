@@ -34,6 +34,10 @@ dependencies {
     implementation 'com.google.firebase:firebase-ml-vision-object-detection-model:16.0.0'
     api 'com.otaliastudios:cameraview:1.6.1'
 
+    implementation 'com.google.firebase:firebase-auth:16.1.0'
+    implementation 'com.google.firebase:firebase-firestore:18.2.0'
+    implementation 'com.google.android.gms:play-services-maps:15.0.1'
+    implementation 'com.google.android.gms:play-services-location:15.0.1'
 
 }
 apply plugin: 'com.google.gms.google-services'

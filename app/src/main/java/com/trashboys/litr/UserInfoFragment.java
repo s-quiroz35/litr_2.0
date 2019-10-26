@@ -11,7 +11,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 import com.google.firebase.auth.FirebaseAuth;
-
+//import com.google.firebase.firestore.FirebaseFirestore;
 
 public class UserInfoFragment extends Fragment {
 
@@ -26,9 +26,16 @@ public class UserInfoFragment extends Fragment {
         //if it is DashboardFragment it should have R.layout.fragment_dashboard
         mAuth = FirebaseAuth.getInstance();
 
+        // Access a Cloud Firestore instance from your Activity
+        //FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+
         View view = inflater.inflate(R.layout.fragment_user_info, null);
         TextView userNameText = (TextView) view.findViewById(R.id.usernameText);
         userNameText.setText("Username: " + mAuth.getUid());
+
+
+
         Button signOutButton = view.findViewById(R.id.signOutButton);
         signOutButton.setOnClickListener(mCorkyListener);
 
