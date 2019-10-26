@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1048464726538",
+    "firebase_url": "https://litr-v2.firebaseio.com",
+    "project_id": "litr-v2",
+    "storage_bucket": "litr-v2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1048464726538:android:622a17cb775f6a93249df3",
+        "android_client_info": {
+          "package_name": "com.trashboys.litr"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1048464726538-gum20fhrr9q8q32q6b5vm7acrq1kpige.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBHkK4Ni7LTxHDnGPWgeN87DtHywHJjzLw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1048464726538-gum20fhrr9q8q32q6b5vm7acrq1kpige.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
