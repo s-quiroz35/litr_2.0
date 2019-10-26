@@ -79,6 +79,34 @@ public class LoginActivity extends AppCompatActivity implements
                             Log.d(TAG, "createUserWithEmail:success");
                             FirebaseUser user = mAuth.getCurrentUser();
                             updateUI(user);
+
+                            ///////////////ADD TO DATABASE/////////////////
+                            // Create a new user with a first and last name
+                            Map<String, Object> newUser = new HashMap<>();
+                            newUser.put("username", "test");
+                            newUser.put("email", mEmailField.getText().toString());
+                            newUser.put("UID", mAuth.getCurrentUser().getUid());
+                            newUser.put("points", 0);
+                            newUser.put("profilepicture", "PutLinkHere");
+
+                            // Add a new document with a generated ID
+                            db.collection("users")
+                                    .add(newUser)
+                                    .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                        @Override
+                                        public void onSuccess(DocumentReference documentReference) {
+                                            Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
+                                        }
+                                    })
+                                    .addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            Log.w(TAG, "Error adding document", e);
+                                        }
+                                    });
+
+
+                            //END ADD TO DATABASE//
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w(TAG, "createUserWithEmail:failure", task.getException());
@@ -90,27 +118,6 @@ public class LoginActivity extends AppCompatActivity implements
                     }
                 });
 
-        // Create a new user with a first and last name
-        Map<String, Object> user = new HashMap<>();
-        user.put("username", "test");
-        user.put("email", "Lovelace");
-        user.put("UID", 1815);
-
-        // Add a new document with a generated ID
-        db.collection("users")
-                .add(user)
-                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                    @Override
-                    public void onSuccess(DocumentReference documentReference) {
-                        Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w(TAG, "Error adding document", e);
-                    }
-                });
 
 
 
