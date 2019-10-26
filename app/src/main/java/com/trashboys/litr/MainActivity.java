@@ -58,7 +58,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadFragment(Fragment fragment) {
         // load fragment
-        if (getSupportFragmentManager().findFragmentById(R.id.frame_container) == fragment) {
+        if (getSupportFragmentManager().findFragmentById(R.id.frame_container) instanceof CameraFragment && fragment instanceof CameraFragment ||
+                getSupportFragmentManager().findFragmentById(R.id.frame_container) instanceof UserInfoFragment && fragment instanceof UserInfoFragment ||
+                getSupportFragmentManager().findFragmentById(R.id.frame_container) instanceof MapFragment && fragment instanceof MapFragment) {
             return;
         }
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
