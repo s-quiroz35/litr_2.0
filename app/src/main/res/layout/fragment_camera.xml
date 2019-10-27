@@ -17,4 +17,9 @@
             android:layout_centerHorizontal="true"
             android:layout_marginBottom="64dp"
             android:text="Take Picture" />
+    <SurfaceView
+            android:layout_alignParentTop="true"
+            android:id="@+id/TransparentView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
 </RelativeLayout>
