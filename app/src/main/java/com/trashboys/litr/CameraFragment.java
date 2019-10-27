@@ -1,5 +1,7 @@
 package com.trashboys.litr;
 
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
@@ -8,13 +10,27 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.util.SparseIntArray;
 import android.view.*;
 import android.widget.Button;
 import android.widget.Toast;
+
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
+
 import com.google.firebase.ml.vision.FirebaseVision;
 import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata;
@@ -26,14 +42,37 @@ import com.otaliastudios.cameraview.Frame;
 import com.otaliastudios.cameraview.FrameProcessor;
 import com.otaliastudios.cameraview.Size;
 
+
+import java.io.*;
 import java.nio.ByteBuffer;
-import java.util.List;
+import java.util.*;
+import static android.content.ContentValues.TAG;
 
 
 public class CameraFragment extends Fragment {
 
+
+
     private Button takePictureButton;
+    private FusedLocationProviderClient fusedLocationClient;
+    private boolean mLocationPermissionGranted;
+    public static int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION =1;
+
+    Map<String, Object> litter = new HashMap<>();
+
+
     private CameraView cameraView;
+    private FirebaseFirestore db = FirebaseFirestore.getInstance();
+    private FirebaseAuth mAuth = FirebaseAuth.getInstance();
+
+
+    private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
+    static {
+        ORIENTATIONS.append(Surface.ROTATION_0, 90);
+        ORIENTATIONS.append(Surface.ROTATION_90, 0);
+        ORIENTATIONS.append(Surface.ROTATION_180, 270);
+        ORIENTATIONS.append(Surface.ROTATION_270, 180);
+    }
 
 
     private FirebaseVisionObjectDetectorOptions options;
@@ -119,10 +158,98 @@ public class CameraFragment extends Fragment {
         takePictureButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //takePicture();
+                takePicture();
             }
         });
         return view;
+    }
+
+    private void takePicture(){
+        ///////////////ADD TO DATABASE/////////////////
+        // Create a new user with a first and last name
+
+
+        litter.put("picker", "null");
+        litter.put("recorder", mAuth.getCurrentUser().getUid());
+
+        getLocationPermission();
+
+        LocationRequest mLocationRequest = LocationRequest.create();
+        mLocationRequest.setInterval(60000);
+        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        LocationCallback mLocationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult == null) {
+                    return;
+                }
+                for (Location location : locationResult.getLocations()) {
+                    if (location != null) {
+                        //TODO: UI updates.
+                    }
+                }
+            }
+        };
+
+
+        LocationServices.getFusedLocationProviderClient(getActivity()).requestLocationUpdates(mLocationRequest, mLocationCallback, null);
+
+
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(getActivity());
+
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        // Got last known location. In some rare situations this can be null.
+                        if (location != null) {
+                            // Logic to handle location object
+                            litter.put("geolocation",   new GeoPoint(location.getLatitude(), location.getLongitude()));
+                        } else{
+                            litter.put("geolocation",   new GeoPoint(0f, 0f));
+                        }
+                    }
+                });
+
+        litter.put("litterpicture", "PutLinkHere");
+
+        // Add a new document with a generated ID
+        db.collection("litter")
+                .add(litter)
+                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                    @Override
+                    public void onSuccess(DocumentReference documentReference) {
+                        Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "Error adding document", e);
+                    }
+                });
+
+
+        //END ADD TO DATABASE//
+    }
+
+    private void getLocationPermission() {
+        /*
+         * Request location permission, so that we can get the location of the
+         * device. The result of the permission request is handled by a callback,
+         * onRequestPermissionsResult.
+         */
+        if (ContextCompat.checkSelfPermission(getContext(),
+                android.Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            mLocationPermissionGranted = true;
+        } else {
+            ActivityCompat.requestPermissions(getActivity(),
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+        }
     }
 
     private int closestDegree(int deg) {
