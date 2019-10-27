@@ -102,8 +102,8 @@ public class LoginActivity extends AppCompatActivity implements
                             newUser.put("username", mUsernameField.getText().toString());
                             newUser.put("email", mEmailField.getText().toString());
                             newUser.put("UID", mAuth.getCurrentUser().getUid());
-                            newUser.put("points", 0);
-                            newUser.put("profilepicture", "PutLinkHere");
+                            newUser.put("points", 5);
+                            newUser.put("profilepicture", "https://i.imgur.com/C8ENv8y.jpg");
 
                             // Add a new document with a generated ID
                             db.collection("users")
@@ -272,4 +272,6 @@ public class LoginActivity extends AppCompatActivity implements
             recover = true;
         }
     }
+
+
 }
