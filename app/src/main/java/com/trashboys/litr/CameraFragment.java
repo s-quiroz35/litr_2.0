@@ -309,7 +309,7 @@ public class CameraFragment extends Fragment {
                             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                                 // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
                                 // ...
-                                litter.put("litterPicture", path);
+                                litter.put("litterPic", path);
                             }
                         });
                     }

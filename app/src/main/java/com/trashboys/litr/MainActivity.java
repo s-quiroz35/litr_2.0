@@ -7,6 +7,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.MenuItem;
 import android.widget.TextView;
 
@@ -17,12 +18,29 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
+
+import java.util.ArrayList;
+
+import static android.support.constraint.Constraints.TAG;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private ActionBar toolbar;
     private GoogleMap mMap;
     private SupportMapFragment mapFragment;
+
+    private ArrayList<QueryDocumentSnapshot> litterlist = new ArrayList<>();
+    private ArrayList<LatLng> locations = new ArrayList<>();
+
+    FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+
     // Obtain the SupportMapFragment and get notified when the map is ready to be used.
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -53,16 +71,37 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+
+        db.collection("litter")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                if(document.get("geolocation") != null){
+                                    GeoPoint loc = (GeoPoint) document.get("geolocation");
+                                    LatLng location = new LatLng(loc.getLatitude(), loc.getLongitude());
+                                    mMap.addMarker(new MarkerOptions().position(location).icon(BitmapDescriptorFactory.
+                                            defaultMarker(BitmapDescriptorFactory.HUE_AZURE)).title("Trash"));
+                                }
+
+                            }
+                        } else {
+                            Log.d(TAG, "Error getting documents: ", task.getException());
+                        }
+                    }
+                });
+
+
         // Add a marker in Sydney and move the camera
         LatLng location = new LatLng(33.7773, -84.3962);
-        LatLng location2 = new LatLng(33.9480, -83.3773);
 
         mMap.addMarker(new MarkerOptions().position(location).title("Current Location"));
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
         mMap.moveCamera(CameraUpdateFactory.zoomTo(17));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(location));
-        mMap.addMarker(new MarkerOptions().position(location2).icon(BitmapDescriptorFactory.
-                defaultMarker(BitmapDescriptorFactory.HUE_AZURE)).title("Trash"));
+
 //        mMap.addMarker(new MarkerOptions().position(location).title("Litter"));
 //        mMap.addMarker(new MarkerOptions().position(location).title("Litter"));
 //        mMap.addMarker(new MarkerOptions().position(location).title("Litter"));
