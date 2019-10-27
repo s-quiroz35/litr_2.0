@@ -7,8 +7,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.Toast;
+import android.view.ViewGroup;
+import android.widget.*;
+
 import java.util.*;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -35,6 +36,13 @@ public class LoginActivity extends AppCompatActivity implements
 
     private EditText mEmailField;
     private EditText mPasswordField;
+    private EditText mPasswordConfirmField;
+    private EditText mUsernameField;
+    private Button mSignInButton;
+    private TextView mForgotPassword;
+    private LinearLayout toggle;
+    private boolean signUp = false;
+    private boolean recover = false;
 
     private FirebaseAuth mAuth;
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -44,13 +52,21 @@ public class LoginActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+        getSupportActionBar().hide();
+
         // Views
         mEmailField = findViewById(R.id.fieldEmail);
         mPasswordField = findViewById(R.id.fieldPassword);
+        mPasswordConfirmField = findViewById(R.id.fieldPasswordConfirm);
+        mUsernameField = findViewById(R.id.fieldUsername);
+        mForgotPassword = findViewById(R.id.forgotPassword);
+        toggle = findViewById(R.id.createToggleContainer);
 
         // Buttons
-        findViewById(R.id.emailSignInButton).setOnClickListener(this);
+        mSignInButton = findViewById(R.id.emailSignInButton);
+        mSignInButton.setOnClickListener(this);
         findViewById(R.id.emailCreateAccountButton).setOnClickListener(this);
+        findViewById(R.id.forgotPassword).setOnClickListener(this);
         FirebaseApp.initializeApp(this);
         mAuth = FirebaseAuth.getInstance();
     }
@@ -83,11 +99,11 @@ public class LoginActivity extends AppCompatActivity implements
                             ///////////////ADD TO DATABASE/////////////////
                             // Create a new user with a first and last name
                             Map<String, Object> newUser = new HashMap<>();
-                            newUser.put("username", "test");
+                            newUser.put("username", mUsernameField.getText().toString());
                             newUser.put("email", mEmailField.getText().toString());
                             newUser.put("UID", mAuth.getCurrentUser().getUid());
-                            newUser.put("points", 0);
-                            newUser.put("profilepicture", "PutLinkHere");
+                            newUser.put("points", 5);
+                            newUser.put("profilepicture", "https://i.imgur.com/C8ENv8y.jpg");
 
                             // Add a new document with a generated ID
                             db.collection("users")
@@ -165,13 +181,36 @@ public class LoginActivity extends AppCompatActivity implements
         } else {
             mEmailField.setError(null);
         }
-
         String password = mPasswordField.getText().toString();
-        if (TextUtils.isEmpty(password)) {
-            mPasswordField.setError("Required.");
-            valid = false;
-        } else {
-            mPasswordField.setError(null);
+
+        if (!recover) {
+            if (TextUtils.isEmpty(password)) {
+                mPasswordField.setError("Required.");
+                valid = false;
+            } else {
+                mPasswordField.setError(null);
+            }
+        }
+
+        if (signUp) {
+            String passwordConfirm = mPasswordConfirmField.getText().toString();
+            if (TextUtils.isEmpty(passwordConfirm)) {
+                mPasswordConfirmField.setError("Required.");
+                valid = false;
+            } else if (!password.equals(passwordConfirm)) {
+                mPasswordConfirmField.setError("Passwords must match.");
+                valid = false;
+            } else {
+                mPasswordConfirmField.setError(null);
+            }
+
+            String username = mUsernameField.getText().toString();
+            if (TextUtils.isEmpty(username)) {
+                mUsernameField.setError("Required.");
+                valid = false;
+            } else {
+                mUsernameField.setError(null);
+            }
         }
 
         return valid;
@@ -189,10 +228,50 @@ public class LoginActivity extends AppCompatActivity implements
     public void onClick(View v) {
         int i = v.getId();
         if (i == R.id.emailCreateAccountButton) {
-            createAccount(mEmailField.getText().toString(), mPasswordField.getText().toString());
-            return;
+            if (!signUp) {
+                mSignInButton.setText("Sign Up");
+                ViewGroup.LayoutParams params = mPasswordConfirmField.getLayoutParams();
+                params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                mPasswordConfirmField.setLayoutParams(params);
+                mUsernameField.setLayoutParams(params);
+                mForgotPassword.setVisibility(View.INVISIBLE);
+                toggle.setVisibility(View.INVISIBLE);
+                signUp = true;
+            }
         } else if (i == R.id.emailSignInButton) {
-            signIn(mEmailField.getText().toString(), mPasswordField.getText().toString());
+            if (recover) {
+                if (!validateForm()) {
+                    return;
+                }
+
+                mAuth.sendPasswordResetEmail(mEmailField.getText().toString())
+                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()) {
+                                    Toast.makeText(LoginActivity.this, "Success",
+                                            Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(LoginActivity.this, "Sending password email failed.",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        });
+                return;
+            }
+            if (!signUp) {
+                signIn(mEmailField.getText().toString(), mPasswordField.getText().toString());
+            } else {
+                createAccount(mEmailField.getText().toString(), mPasswordField.getText().toString());
+            }
+        } else if (i == R.id.forgotPassword) {
+            mPasswordField.setVisibility(View.INVISIBLE);
+            mForgotPassword.setVisibility(View.INVISIBLE);
+            toggle.setVisibility(View.INVISIBLE);
+            mSignInButton.setText("Recover Password");
+            recover = true;
         }
     }
+
+
 }
