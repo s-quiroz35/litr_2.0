@@ -126,9 +126,9 @@ public class UserInfoFragment extends Fragment {
                         if (task.isSuccessful()) {
                             for (QueryDocumentSnapshot document : task.getResult()) {
                                 litterlist.add(document);
-                                if (litterlist.get(0) != null && litterlist.get(0).get("location") != null) {
-                                    double lat = ((GeoPoint) litterlist.get(0).get("location")).getLatitude();
-                                    double longi = ((GeoPoint) litterlist.get(0).get("location")).getLongitude();
+                                if (litterlist.get(0) != null && litterlist.get(0).get("geolocation") != null) {
+                                    double lat = ((GeoPoint) litterlist.get(0).get("geolocation")).getLatitude();
+                                    double longi = ((GeoPoint) litterlist.get(0).get("geolocation")).getLongitude();
                                     litter.add("Latitude: " + lat + ", Longitude: " + longi);
                                     litterpics.add((String) litterlist.get(0).get("litterPic"));
                                 }
@@ -139,6 +139,7 @@ public class UserInfoFragment extends Fragment {
                         }
                     }
                 });
+
         LitterAdapter adapter = new LitterAdapter(this.getActivity(), litter, litterpics);
         ListView list=(ListView) view.findViewById(R.id.list);
         list.setAdapter(adapter);
