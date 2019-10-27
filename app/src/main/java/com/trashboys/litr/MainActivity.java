@@ -42,13 +42,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     loadFragment(fragment);
                     return true;
                 case R.id.navigation_map:
-
                     toolbar.setTitle("Litter Map");
-                    //setContentView(R.layout.activity_maps);
-                    /*
-                    loadFragment((Fragment) Mfragment);
-                    return true;
-                    */
                     loadFragment(mapFragment);
                     return true;
             }
@@ -59,16 +53,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
         // Add a marker in Sydney and move the camera
         LatLng location = new LatLng(33.7773, -84.3962);
         LatLng location2 = new LatLng(33.9480, -83.3773);
 
         mMap.addMarker(new MarkerOptions().position(location).title("Current Location"));
-        mMap.getUiSettings().setMyLocationButtonEnabled(false);
+        mMap.getUiSettings().setMyLocationButtonEnabled(true);
         mMap.moveCamera(CameraUpdateFactory.zoomTo(17));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(location));
-        mMap.addMarker(new MarkerOptions().position(location2).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)).title("Trash"));
+        mMap.addMarker(new MarkerOptions().position(location2).icon(BitmapDescriptorFactory.
+                defaultMarker(BitmapDescriptorFactory.HUE_AZURE)).title("Trash"));
 //        mMap.addMarker(new MarkerOptions().position(location).title("Litter"));
 //        mMap.addMarker(new MarkerOptions().position(location).title("Litter"));
 //        mMap.addMarker(new MarkerOptions().position(location).title("Litter"));
