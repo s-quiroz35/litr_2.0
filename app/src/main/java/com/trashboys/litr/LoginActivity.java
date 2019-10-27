@@ -86,7 +86,7 @@ public class LoginActivity extends AppCompatActivity implements
                             newUser.put("username", "test");
                             newUser.put("email", mEmailField.getText().toString());
                             newUser.put("UID", mAuth.getCurrentUser().getUid());
-                            newUser.put("points", 0);
+                            newUser.put("points", 5);
                             newUser.put("profilepicture", "PutLinkHere");
 
                             // Add a new document with a generated ID
@@ -195,4 +195,6 @@ public class LoginActivity extends AppCompatActivity implements
             signIn(mEmailField.getText().toString(), mPasswordField.getText().toString());
         }
     }
+
+
 }
