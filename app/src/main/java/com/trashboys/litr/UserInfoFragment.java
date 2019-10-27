@@ -122,7 +122,7 @@ public class UserInfoFragment extends Fragment {
                             for (QueryDocumentSnapshot document : task.getResult()) {
                                 userslist.add(document);
                                 if (userslist.get(0) != null && userslist.get(0).get("profilepicture") != null) {
-                                    pointval += (Long) userslist.get(0).get("points");
+                                    pointval += (Long) userslist.get(i).get("points");
                                     //pic = getBitmapFromURL((String) list.get(0).get("profilepicture"));
                                     pictureURL = (String) userslist.get(0).get("profilepicture");
                                     userNameText.setText("Username: " + userslist.get(0).get("username"));
@@ -151,9 +151,10 @@ public class UserInfoFragment extends Fragment {
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
                             for (QueryDocumentSnapshot document : task.getResult()) {
-                                litterlist.add(document);          if (litterlist.get(0) != null && litterlist.get(0).get("geolocation") != null) {
-                                    double lat = ((GeoPoint) litterlist.get(0).get("geolocation")).getLatitude();
-                                    double longi = ((GeoPoint) litterlist.get(0).get("geolocation")).getLongitude();
+                                litterlist.add(document);
+                                if (litterlist.get(i) != null && litterlist.get(i).get("geolocation") != null) {
+                                    double lat = ((GeoPoint) litterlist.get(i).get("geolocation")).getLatitude();
+                                    double longi = ((GeoPoint) litterlist.get(i).get("geolocation")).getLongitude();
                                     litter.add("Latitude: " + lat + ", Longitude: " + longi);
                                     //litterpics.add((String) litterlist.get(i).get("litterPicture"));
                                     str = (String) litterlist.get(i).get("litterPicture");
@@ -174,9 +175,9 @@ public class UserInfoFragment extends Fragment {
                         }
                     }
                 });
-        LitterAdapter adapter = new LitterAdapter(this.getActivity(), litter, litterpics);
-        ListView list=(ListView) view.findViewById(R.id.list);
-        list.setAdapter(adapter);
+        //LitterAdapter adapter = new LitterAdapter(this.getActivity(), litter, litterpics);
+        //ListView list=(ListView) view.findViewById(R.id.list);
+        //list.setAdapter(adapter);
 //        Integer theprint = list.size();
 
         //userNameText.setText(Integer.toString())
