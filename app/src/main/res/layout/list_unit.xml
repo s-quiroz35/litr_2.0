@@ -9,6 +9,9 @@
             android:layout_height="100dp"/>
         <TextView
             android:id="@+id/txt"
+            android:textColor="#ffffff"
+            android:textSize="24sp"
+            android:layout_marginLeft="10dp"
             android:layout_width="wrap_content"
             android:layout_height="100dp" />
     </TableRow>

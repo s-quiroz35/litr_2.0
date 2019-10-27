@@ -253,6 +253,13 @@ public class CameraFragment extends Fragment {
                                 // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
                                 // ...
                                 litter.put("litterPicture", path);
+//                                File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+//                                File image = File.createTempFile(
+//                                        path,  /* prefix */
+//                                        ".jpg",         /* suffix */
+//                                        storageDir      /* directory */
+//                                );
+
                             }
                         });
                     }
