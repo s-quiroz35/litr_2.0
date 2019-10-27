@@ -216,6 +216,15 @@ public class LoginActivity extends AppCompatActivity implements
         return valid;
     }
 
+    @Override
+    public void onBackPressed()
+    {
+        Intent homeIntent = new Intent(Intent.ACTION_MAIN);
+        homeIntent.addCategory( Intent.CATEGORY_HOME );
+        homeIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(homeIntent);
+    }
+
     private void updateUI(FirebaseUser user) {
         if (user != null) {
             Intent myIntent = new Intent(LoginActivity.this, MainActivity.class);
@@ -272,6 +281,5 @@ public class LoginActivity extends AppCompatActivity implements
             recover = true;
         }
     }
-
 
 }
