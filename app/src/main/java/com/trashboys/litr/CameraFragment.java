@@ -8,6 +8,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.PorterDuff;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -29,16 +30,23 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.GeoPoint;
+import com.google.firebase.firestore.*;
 
+import com.google.firebase.ml.common.FirebaseMLException;
+import com.google.firebase.ml.common.modeldownload.FirebaseModelManager;
 import com.google.firebase.ml.vision.FirebaseVision;
 import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata;
+import com.google.firebase.ml.vision.label.FirebaseVisionImageLabel;
+import com.google.firebase.ml.vision.label.FirebaseVisionImageLabeler;
+
+import com.google.firebase.ml.common.modeldownload.FirebaseLocalModel;
+import com.google.firebase.ml.vision.label.FirebaseVisionOnDeviceAutoMLImageLabelerOptions;
 import com.google.firebase.ml.vision.objects.FirebaseVisionObject;
 import com.google.firebase.ml.vision.objects.FirebaseVisionObjectDetector;
 import com.google.firebase.ml.vision.objects.FirebaseVisionObjectDetectorOptions;
@@ -55,6 +63,7 @@ import com.otaliastudios.cameraview.Size;
 
 
 import java.io.*;
+import java.net.URI;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -64,11 +73,13 @@ import static android.content.ContentValues.TAG;
 public class CameraFragment extends Fragment {
 
 
-
+    FirebaseVisionImageLabeler labeler;
     private Button takePictureButton;
     private FusedLocationProviderClient fusedLocationClient;
     private boolean mLocationPermissionGranted;
     private FirebaseStorage storage = FirebaseStorage.getInstance();
+    String litterString = null;
+
 
     // Create a storage reference from our app
     StorageReference storageRef = storage.getReference();
@@ -104,7 +115,6 @@ public class CameraFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-
         View view = inflater.inflate(R.layout.fragment_camera, null);
 
         options =
@@ -115,6 +125,27 @@ public class CameraFragment extends Fragment {
 
         objectDetector =
                 FirebaseVision.getInstance().getOnDeviceObjectDetector(options);
+
+
+
+        FirebaseLocalModel localModel = new FirebaseLocalModel.Builder("trash")
+                .setAssetFilePath("manifest.json")
+                .build();
+        FirebaseModelManager.getInstance().registerLocalModel(localModel);
+
+        try {
+            FirebaseVisionOnDeviceAutoMLImageLabelerOptions options =
+                    new FirebaseVisionOnDeviceAutoMLImageLabelerOptions.Builder()
+                            .setLocalModelName("trash")
+                            .setConfidenceThreshold(0.7f)  // Evaluate your model in the Firebase console
+                            // to determine an appropriate value.
+                            .build();
+            labeler = FirebaseVision.getInstance().getOnDeviceAutoMLImageLabeler(options);
+        } catch (FirebaseMLException e) {
+            // ...
+        }
+
+
 
         transparentView = view.findViewById(R.id.TransparentView);
         transparentView.setZOrderOnTop(true);
@@ -145,14 +176,39 @@ public class CameraFragment extends Fragment {
                          .build();
                  FirebaseVisionImage image = FirebaseVisionImage.fromByteBuffer(buffer, metadata);
 
+                 labeler.processImage(image)
+                         .addOnSuccessListener(new OnSuccessListener<List<FirebaseVisionImageLabel>>() {
+                             @Override
+                             public void onSuccess(List<FirebaseVisionImageLabel> labels) {
+                                 if (!labels.isEmpty()) {
+                                     FirebaseVisionImageLabel label = labels.get(0);
+                                     litterString = "" + Math.round((label.getConfidence() * 100)) + "% sure its " + label.getText();
+                                 }
+                             }
+                         })
+                         .addOnFailureListener(new OnFailureListener() {
+                             @Override
+                             public void onFailure(@NonNull Exception e) {
+                                 // Task failed with an exception
+                                 // ...
+                                 litterString = null;
+                             }
+                         });
+
                  objectDetector.processImage(image)
                          .addOnSuccessListener(
                                  new OnSuccessListener<List<FirebaseVisionObject>>() {
                                      @Override
-                                     public void onSuccess(List<FirebaseVisionObject> detectedObjects) {
+                                     public void onSuccess(final List<FirebaseVisionObject> detectedObjects) {
                                           if (!detectedObjects.isEmpty()) {
-                                                for (FirebaseVisionObject obj: detectedObjects)
-                                                    DrawFocusRect(obj.getBoundingBox().left,obj.getBoundingBox().top, obj.getBoundingBox().right, obj.getBoundingBox().bottom, 0xFE0000FE);
+                                                for (FirebaseVisionObject obj: detectedObjects) {
+                                                    if (litterString == null) {
+                                                        DrawFocusRect(obj.getBoundingBox().left,obj.getBoundingBox().top, obj.getBoundingBox().right, obj.getBoundingBox().bottom, 0xFE1FCC8F);
+                                                    } else {
+                                                        DrawFocusRect(obj.getBoundingBox().left,obj.getBoundingBox().top, obj.getBoundingBox().right, obj.getBoundingBox().bottom, 0xFE1FCC8F, litterString);
+
+                                                    }
+                                                }
                                               return;
                                           }
                                           clearCanvas();
@@ -235,6 +291,7 @@ public class CameraFragment extends Fragment {
         cameraView.addCameraListener(new CameraListener() {
             @Override
             public void onPictureTaken(final byte[] picture) {
+
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -252,14 +309,8 @@ public class CameraFragment extends Fragment {
                             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                                 // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
                                 // ...
-                                litter.put("litterPicture", path);
-//                                File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-//                                File image = File.createTempFile(
-//                                        path,  /* prefix */
-//                                        ".jpg",         /* suffix */
-//                                        storageDir      /* directory */
-//                                );
 
+                                litter.put("litterPic", path);
                             }
                         });
                     }
@@ -376,6 +427,29 @@ public class CameraFragment extends Fragment {
                 paint.setColor(color);
                 paint.setStrokeWidth(3);
                 canvas.drawRect(RectLeft, RectTop, RectRight, RectBottom, paint);
+
+                holderTransparent.unlockCanvasAndPost(canvas);
+            }
+
+        }
+
+    }
+
+    private void DrawFocusRect(final float RectLeft, final float RectTop, final float RectRight, final float RectBottom, final int color, String litVal)
+    {
+        if (holderTransparent != null && transparentView != null) {
+            canvas = holderTransparent.lockCanvas();
+            if (canvas != null) {
+                canvas.drawColor(0, PorterDuff.Mode.CLEAR);
+                //border's properties
+                paint = new Paint();
+                paint.setStyle(Paint.Style.STROKE);
+                paint.setColor(color);
+                paint.setStrokeWidth(3);
+                paint.setTextSize(48f);
+                canvas.drawRect(RectLeft, RectTop, RectRight, RectBottom, paint);
+                paint.setStyle(Paint.Style.FILL_AND_STROKE);
+                canvas.drawText(litVal, RectLeft, RectBottom, paint);
 
                 holderTransparent.unlockCanvasAndPost(canvas);
             }
