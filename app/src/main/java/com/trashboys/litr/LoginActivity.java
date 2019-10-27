@@ -9,12 +9,21 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
+import java.util.*;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.OnFailureListener;
+
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.DocumentReference;
+
 
 /**
  * A login screen that offers login via email/password.
@@ -28,6 +37,7 @@ public class LoginActivity extends AppCompatActivity implements
     private EditText mPasswordField;
 
     private FirebaseAuth mAuth;
+    private FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -41,7 +51,7 @@ public class LoginActivity extends AppCompatActivity implements
         // Buttons
         findViewById(R.id.emailSignInButton).setOnClickListener(this);
         findViewById(R.id.emailCreateAccountButton).setOnClickListener(this);
-
+        FirebaseApp.initializeApp(this);
         mAuth = FirebaseAuth.getInstance();
     }
 
@@ -69,6 +79,34 @@ public class LoginActivity extends AppCompatActivity implements
                             Log.d(TAG, "createUserWithEmail:success");
                             FirebaseUser user = mAuth.getCurrentUser();
                             updateUI(user);
+
+                            ///////////////ADD TO DATABASE/////////////////
+                            // Create a new user with a first and last name
+                            Map<String, Object> newUser = new HashMap<>();
+                            newUser.put("username", "test");
+                            newUser.put("email", mEmailField.getText().toString());
+                            newUser.put("UID", mAuth.getCurrentUser().getUid());
+                            newUser.put("points", 0);
+                            newUser.put("profilepicture", "PutLinkHere");
+
+                            // Add a new document with a generated ID
+                            db.collection("users")
+                                    .add(newUser)
+                                    .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                        @Override
+                                        public void onSuccess(DocumentReference documentReference) {
+                                            Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
+                                        }
+                                    })
+                                    .addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            Log.w(TAG, "Error adding document", e);
+                                        }
+                                    });
+
+
+                            //END ADD TO DATABASE//
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w(TAG, "createUserWithEmail:failure", task.getException());
@@ -79,6 +117,11 @@ public class LoginActivity extends AppCompatActivity implements
 
                     }
                 });
+
+
+
+
+
     }
 
     private void signIn(String email, String password) {
@@ -109,6 +152,8 @@ public class LoginActivity extends AppCompatActivity implements
                     }
                 });
     }
+
+
 
     private boolean validateForm() {
         boolean valid = true;
@@ -151,4 +196,3 @@ public class LoginActivity extends AppCompatActivity implements
         }
     }
 }
-
