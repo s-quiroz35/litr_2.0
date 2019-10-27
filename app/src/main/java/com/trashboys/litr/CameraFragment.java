@@ -1,5 +1,7 @@
 package com.trashboys.litr;
 
+import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.graphics.Canvas;
@@ -7,6 +9,8 @@ import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
@@ -18,6 +22,7 @@ import android.util.SparseIntArray;
 import android.view.*;
 import android.widget.Button;
 import android.widget.Toast;
+
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -37,14 +42,21 @@ import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata;
 import com.google.firebase.ml.vision.objects.FirebaseVisionObject;
 import com.google.firebase.ml.vision.objects.FirebaseVisionObjectDetector;
 import com.google.firebase.ml.vision.objects.FirebaseVisionObjectDetectorOptions;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+import com.otaliastudios.cameraview.CameraListener;
+import com.otaliastudios.cameraview.CameraUtils;
 import com.otaliastudios.cameraview.CameraView;
 import com.otaliastudios.cameraview.Frame;
 import com.otaliastudios.cameraview.FrameProcessor;
 import com.otaliastudios.cameraview.Size;
 
 
+
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import static android.content.ContentValues.TAG;
 
@@ -56,7 +68,13 @@ public class CameraFragment extends Fragment {
     private Button takePictureButton;
     private FusedLocationProviderClient fusedLocationClient;
     private boolean mLocationPermissionGranted;
+    private FirebaseStorage storage = FirebaseStorage.getInstance();
+
+    // Create a storage reference from our app
+    StorageReference storageRef = storage.getReference();
+
     public static int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION =1;
+    static final int REQUEST_IMAGE_CAPTURE = 1;
 
     Map<String, Object> litter = new HashMap<>();
 
@@ -213,7 +231,39 @@ public class CameraFragment extends Fragment {
                     }
                 });
 
-        litter.put("litterpicture", "PutLinkHere");
+
+        cameraView.addCameraListener(new CameraListener() {
+            @Override
+            public void onPictureTaken(final byte[] picture) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        final String path = GetFileName();
+                        final StorageReference photoRef = storageRef.child(path);
+
+                        UploadTask uploadTask = photoRef.putBytes(picture);
+                        uploadTask.addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception exception) {
+                                // Handle unsuccessful uploads
+                            }
+                        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                            @Override
+                            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
+                                // ...
+                                litter.put("litterPicture", path);
+                            }
+                        });
+                    }
+                }).start();
+
+            }
+        });
+
+        cameraView.capturePicture();
+
+
 
         // Add a new document with a generated ID
         db.collection("litter")
@@ -233,6 +283,20 @@ public class CameraFragment extends Fragment {
 
 
         //END ADD TO DATABASE//
+    }
+
+
+    private String GetFileName(){
+        String fileName = new SimpleDateFormat("yyyyMMddHHmm").format(new Date());
+        fileName = "litter/" + fileName + ".jpg";
+        return fileName;
+    }
+
+    private void dispatchTakePictureIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getActivity().getPackageManager()) != null) {
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+        }
     }
 
     private void getLocationPermission() {
