@@ -1,6 +1,7 @@
 package com.trashboys.litr;
 
 
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -19,6 +20,22 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
+import android.widget.Toast;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -57,10 +74,15 @@ public class UserInfoFragment extends Fragment {
     //private ArrayList<Double> litterlong = new ArrayList<>();
     private ArrayList<String> litter = new ArrayList<>();
     private ArrayList<String> litterpics = new ArrayList<>();
+    private Activity the_context = this.getActivity();
     private TextView points;
     private long pointval = 0;
     private ImageView pic;
     private String pictureURL;
+    private ListView list;
+    private int i = 0;
+    private String str;
+    TextView userNameText;
 
     private FirebaseAuth mAuth;
     FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -79,10 +101,11 @@ public class UserInfoFragment extends Fragment {
 
 
         View view = inflater.inflate(R.layout.fragment_user_info, null);
-        TextView userNameText = (TextView) view.findViewById(R.id.usernameText);
+        userNameText = (TextView) view.findViewById(R.id.usernameText);
         pic = (ImageView) view.findViewById(R.id.profile_pic);
-        userNameText.setText("Username: " + mAuth.getUid());
+
         points = (TextView) view.findViewById(R.id.points_earned);
+        list=(ListView) view.findViewById(R.id.list);
 
         //View view = inflater.inflate(R.layout.fragment_user_info, null);
         //TextView userNameText = (TextView) view.findViewById(R.id.usernameText);
@@ -99,11 +122,12 @@ public class UserInfoFragment extends Fragment {
                             for (QueryDocumentSnapshot document : task.getResult()) {
                                 userslist.add(document);
                                 if (userslist.get(0) != null && userslist.get(0).get("profilepicture") != null) {
-                                    pointval += (Long) userslist.get(0).get("points");
+                                    pointval += (Long) userslist.get(i).get("points");
                                     //pic = getBitmapFromURL((String) list.get(0).get("profilepicture"));
                                     pictureURL = (String) userslist.get(0).get("profilepicture");
-//                                    Toast toast = Toast.makeText(this.getApplicationContext(), text, duration);
-//                                    toast.show();
+                                    userNameText.setText("Username: " + userslist.get(0).get("username"));
+                                    //Toast toast = Toast.makeText(getActivity(), pictureURL, Toast.LENGTH_LONG);
+                                    //toast.show();
                                     Picasso.get().load(pictureURL).resize(50,50).into(pic);
                                 }
                                 Long pointvalue = new Long(pointval);
@@ -117,8 +141,10 @@ public class UserInfoFragment extends Fragment {
                     }
                 });
 
+        //litter.add("yeyey");
+        //litterpics.add("https://i.imgur.com/C8ENv8y.jpg");
         db.collection("litter")
-                .whereEqualTo("picker", mAuth.getUid())
+                .whereEqualTo("recorder", mAuth.getUid())
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
@@ -126,23 +152,32 @@ public class UserInfoFragment extends Fragment {
                         if (task.isSuccessful()) {
                             for (QueryDocumentSnapshot document : task.getResult()) {
                                 litterlist.add(document);
-                                if (litterlist.get(0) != null && litterlist.get(0).get("geolocation") != null) {
-                                    double lat = ((GeoPoint) litterlist.get(0).get("geolocation")).getLatitude();
-                                    double longi = ((GeoPoint) litterlist.get(0).get("geolocation")).getLongitude();
+                                if (litterlist.get(i) != null && litterlist.get(i).get("geolocation") != null) {
+                                    double lat = ((GeoPoint) litterlist.get(i).get("geolocation")).getLatitude();
+                                    double longi = ((GeoPoint) litterlist.get(i).get("geolocation")).getLongitude();
                                     litter.add("Latitude: " + lat + ", Longitude: " + longi);
-                                    litterpics.add((String) litterlist.get(0).get("litterPic"));
+                                    //litterpics.add((String) litterlist.get(i).get("litterPicture"));
+                                    str = (String) litterlist.get(i).get("litterPicture");
+
+                                    str = str.substring(str.indexOf('/') + 1, str.indexOf('.'));
+                                    new GetContacts().execute();
+                                    //litterpics.add("https://i.imgur.com/C8ENv8y.jpg");
+
                                 }
+                                //litter.add("yeyey");
+                                //litterpics.add("https://i.imgur.com/C8ENv8y.jpg");
+                                //listAppend();
                                 Log.d(TAG, document.getId() + " => " + document.getData());
+                                i++;
                             }
                         } else {
                             Log.d(TAG, "Error getting documents: ", task.getException());
                         }
                     }
                 });
-
-        LitterAdapter adapter = new LitterAdapter(this.getActivity(), litter, litterpics);
-        ListView list=(ListView) view.findViewById(R.id.list);
-        list.setAdapter(adapter);
+        //LitterAdapter adapter = new LitterAdapter(this.getActivity(), litter, litterpics);
+        //ListView list=(ListView) view.findViewById(R.id.list);
+        //list.setAdapter(adapter);
 //        Integer theprint = list.size();
 
         //userNameText.setText(Integer.toString())
@@ -169,30 +204,57 @@ public class UserInfoFragment extends Fragment {
             }
         }
     };
-
-    public Bitmap getBitmapFromURL(String src) {
-        try {
-            java.net.URL url = new java.net.URL(src);
-            HttpURLConnection connection = (HttpURLConnection) url
-                    .openConnection();
-            connection.setDoInput(true);
-            connection.connect();
-            InputStream input = connection.getInputStream();
-            Bitmap myBitmap = BitmapFactory.decodeStream(input);
-            return myBitmap;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
+    private void listAppend() {
+        LitterAdapter adapter = new LitterAdapter(this.getActivity(), litter, litterpics);
+        list.setAdapter(adapter);
     }
 
-    public static Drawable LoadImageFromWebOperations(String url) {
-        try {
-            InputStream is = (InputStream) new URL(url).getContent();
-            Drawable d = Drawable.createFromStream(is, "src name");
-            return d;
-        } catch (Exception e) {
+
+    private class GetContacts extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+        }
+
+        @Override
+        protected Void doInBackground(Void... arg0) {
+            HttpHandler sh = new HttpHandler();
+            // Making a request to url and getting response
+            str = "https://firebasestorage.googleapis.com/v0/b/litr-v2.appspot.com/o/litter%2F201910270254" + ".txt.jpg";
+            String jsonStr = sh.makeServiceCall(str);
+
+            Log.e(TAG, "Response from url: " + jsonStr);
+            if (jsonStr != null) {
+                try {
+                    JSONObject jsonObj = new JSONObject(jsonStr);
+                    str = str + "?alt=media&token=" + jsonObj.getString("downloadTokens");
+                    //Toast.makeText(getActivity(),
+                     //       "Couldn't get json from server. Check LogCat for possible errors!",
+                       //     Toast.LENGTH_LONG).show();
+
+                    // Getting JSON Array node
+                    //JSONArray contacts = jsonObj.getJSONArray("contacts");
+
+                    // looping through All Contacts
+
+                } catch (final JSONException e) {
+                    Log.e(TAG, "Json parsing error: " + e.getMessage());
+
+                }
+
+            } else {
+                Log.e(TAG, "Couldn't get json from server.");
+            }
+
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            super.onPostExecute(result);
+            litterpics.add(str);
+            listAppend();
         }
     }
 }
