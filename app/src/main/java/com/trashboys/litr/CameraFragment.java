@@ -1,5 +1,9 @@
 package com.trashboys.litr;
 
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.PixelFormat;
+import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -22,29 +26,22 @@ import com.otaliastudios.cameraview.Frame;
 import com.otaliastudios.cameraview.FrameProcessor;
 import com.otaliastudios.cameraview.Size;
 
-import java.io.*;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-
-import static android.content.ContentValues.TAG;
 
 
 public class CameraFragment extends Fragment {
 
     private Button takePictureButton;
     private CameraView cameraView;
-    private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
-    static {
-        ORIENTATIONS.append(Surface.ROTATION_0, 90);
-        ORIENTATIONS.append(Surface.ROTATION_90, 0);
-        ORIENTATIONS.append(Surface.ROTATION_180, 270);
-        ORIENTATIONS.append(Surface.ROTATION_270, 180);
-    }
 
-    FirebaseVisionObjectDetectorOptions options;
-    FirebaseVisionObjectDetector objectDetector;
+
+    private FirebaseVisionObjectDetectorOptions options;
+    private FirebaseVisionObjectDetector objectDetector;
+    private SurfaceView transparentView;
+    private SurfaceHolder holderTransparent;
+    private Canvas canvas;
+    private Paint paint;
 
 
     @Nullable
@@ -56,12 +53,16 @@ public class CameraFragment extends Fragment {
         options =
                 new FirebaseVisionObjectDetectorOptions.Builder()
                         .setDetectorMode(FirebaseVisionObjectDetectorOptions.STREAM_MODE)
-                        .enableClassification()  // Optional
+                        //.enableClassification()  // Optional
                         .build();
 
         objectDetector =
                 FirebaseVision.getInstance().getOnDeviceObjectDetector(options);
 
+        transparentView = view.findViewById(R.id.TransparentView);
+        transparentView.setZOrderOnTop(true);
+        holderTransparent = transparentView.getHolder();
+        holderTransparent.setFormat(PixelFormat.TRANSPARENT);
 
         cameraView = view.findViewById(R.id.cameraView);
         cameraView.setLifecycleOwner(this);
@@ -93,11 +94,11 @@ public class CameraFragment extends Fragment {
                                      @Override
                                      public void onSuccess(List<FirebaseVisionObject> detectedObjects) {
                                           if (!detectedObjects.isEmpty()) {
-
-                                              Toast.makeText(getContext(), getCategory(detectedObjects.get(0).getClassificationCategory()),
-                                                      Toast.LENGTH_SHORT).show();
+                                                for (FirebaseVisionObject obj: detectedObjects)
+                                                    DrawFocusRect(obj.getBoundingBox().left,obj.getBoundingBox().top, obj.getBoundingBox().right, obj.getBoundingBox().bottom, 0xFE0000FE);
                                               return;
                                           }
+                                          clearCanvas();
                                           return;
                                      }
                                  })
@@ -105,12 +106,10 @@ public class CameraFragment extends Fragment {
                                  new OnFailureListener() {
                                      @Override
                                      public void onFailure(@NonNull Exception e) {
-                                         // Task failed with an exception
-                                         // ...
+                                         clearCanvas();
                                          return;
                                      }
                                  });
-
 
              }
          });
@@ -155,6 +154,27 @@ public class CameraFragment extends Fragment {
         }
     }
 
+    private void clearCanvas() {
+        canvas = holderTransparent.lockCanvas();
+        canvas.drawColor(0, PorterDuff.Mode.CLEAR);
+        holderTransparent.unlockCanvasAndPost(canvas);
+    }
+
+    private void DrawFocusRect(final float RectLeft, final float RectTop, final float RectRight, final float RectBottom, final int color)
+    {
+        canvas = holderTransparent.lockCanvas();
+        canvas.drawColor(0, PorterDuff.Mode.CLEAR);
+        //border's properties
+        paint = new Paint();
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setColor(color);
+        paint.setStrokeWidth(3);
+        canvas.drawRect(RectLeft, RectTop, RectRight, RectBottom, paint);
+
+        holderTransparent.unlockCanvasAndPost(canvas);
+
+    }
+
     private String getCategory(int i) {
         switch (i) {
             case 0: return "Unknown";
@@ -165,6 +185,18 @@ public class CameraFragment extends Fragment {
             case 5: return "food";
             default: return "Unknown";
         }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        cameraView.stop();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        cameraView.destroy();
     }
 
 }
