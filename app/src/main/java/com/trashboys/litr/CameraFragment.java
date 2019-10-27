@@ -155,23 +155,34 @@ public class CameraFragment extends Fragment {
     }
 
     private void clearCanvas() {
-        canvas = holderTransparent.lockCanvas();
-        canvas.drawColor(0, PorterDuff.Mode.CLEAR);
-        holderTransparent.unlockCanvasAndPost(canvas);
+        if (holderTransparent != null && transparentView != null) {
+            canvas = holderTransparent.lockCanvas();
+            if (canvas != null) {
+                canvas.drawColor(0, PorterDuff.Mode.CLEAR);
+                holderTransparent.unlockCanvasAndPost(canvas);
+            }
+
+        }
+
     }
 
     private void DrawFocusRect(final float RectLeft, final float RectTop, final float RectRight, final float RectBottom, final int color)
     {
-        canvas = holderTransparent.lockCanvas();
-        canvas.drawColor(0, PorterDuff.Mode.CLEAR);
-        //border's properties
-        paint = new Paint();
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setColor(color);
-        paint.setStrokeWidth(3);
-        canvas.drawRect(RectLeft, RectTop, RectRight, RectBottom, paint);
+        if (holderTransparent != null && transparentView != null) {
+            canvas = holderTransparent.lockCanvas();
+            if (canvas != null) {
+                canvas.drawColor(0, PorterDuff.Mode.CLEAR);
+                //border's properties
+                paint = new Paint();
+                paint.setStyle(Paint.Style.STROKE);
+                paint.setColor(color);
+                paint.setStrokeWidth(3);
+                canvas.drawRect(RectLeft, RectTop, RectRight, RectBottom, paint);
 
-        holderTransparent.unlockCanvasAndPost(canvas);
+                holderTransparent.unlockCanvasAndPost(canvas);
+            }
+
+        }
 
     }
 
