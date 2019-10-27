@@ -1,5 +1,6 @@
 package com.trashboys.litr;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
@@ -40,6 +41,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     FirebaseFirestore db = FirebaseFirestore.getInstance();
 
+    @Override
+    public void onBackPressed()
+    {
+        Intent homeIntent = new Intent(Intent.ACTION_MAIN);
+        homeIntent.addCategory( Intent.CATEGORY_HOME );
+        homeIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(homeIntent);
+    }
 
     // Obtain the SupportMapFragment and get notified when the map is ready to be used.
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
