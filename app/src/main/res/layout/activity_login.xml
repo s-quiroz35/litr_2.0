@@ -1,95 +1,130 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:tools="http://schemas.android.com/tools"
               android:id="@+id/main_layout"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
-              android:background="@color/grey_100"
+              android:background="@color/colorPrimary"
               android:orientation="vertical"
+              android:animateLayoutChanges="true"
               android:weightSum="4">
-
-    <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="3"
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
 
         <ImageView
                 android:id="@+id/icon"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/common_full_open_on_phone" />
+                android:scaleType="fitCenter"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="64dp"
+                android:src="@drawable/recycle" />
 
         <TextView
-                android:id="@+id/titleText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/title_bottom_margin"
-                android:text="@string/emailpassword_title_text" />
+                android:layout_marginTop="12dp"
+                android:layout_gravity="center_horizontal"
+                android:textColor="#FFEEEC"
+                android:textSize="48sp"
+                android:layout_marginBottom="32dp"
+                android:text="littr" />
 
+        <EditText
+                android:id="@+id/fieldEmail"
+                android:layout_width="match_parent"
+                android:layout_marginLeft="24dp"
+                android:layout_marginRight="24dp"
+                android:layout_marginBottom="6dp"
+                android:textColor="@color/brightText"
+                android:textColorHint="@color/dullText"
+                android:textColorHighlight="@color/brightText"
+                android:backgroundTint="@color/dullText"
+                android:layout_height="wrap_content"
+                android:hint="@string/hint_email"
+                android:inputType="textEmailAddress" />
 
+        <EditText
+                android:id="@+id/fieldPassword"
+                android:layout_width="match_parent"
+                android:layout_marginLeft="24dp"
+                android:layout_marginRight="24dp"
+                android:layout_marginBottom="6dp"
+                android:textColor="@color/brightText"
+                android:textColorHint="@color/dullText"
+                android:textColorHighlight="@color/brightText"
+                android:backgroundTint="@color/dullText"
+                android:layout_height="wrap_content"
+                android:hint="@string/hint_password"
+                android:inputType="textPassword" />
+
+        <EditText
+                android:id="@+id/fieldPasswordConfirm"
+                android:layout_width="match_parent"
+                android:layout_marginLeft="24dp"
+                android:layout_marginRight="24dp"
+                android:layout_marginBottom="6dp"
+                android:textColor="@color/brightText"
+                android:textColorHint="@color/dullText"
+                android:textColorHighlight="@color/brightText"
+                android:backgroundTint="@color/dullText"
+                android:layout_height="0dp"
+                android:hint="Confirm Password"
+                android:inputType="textPassword" />
+
+        <EditText
+                android:id="@+id/fieldUsername"
+                android:layout_width="match_parent"
+                android:layout_marginLeft="24dp"
+                android:layout_marginRight="24dp"
+                android:layout_marginBottom="6dp"
+                android:textColor="@color/brightText"
+                android:textColorHint="@color/dullText"
+                android:textColorHighlight="@color/brightText"
+                android:backgroundTint="@color/dullText"
+                android:layout_height="0dp"
+                android:hint="Username"
+                android:inputType="text" />
+
+        <Button
+                android:id="@+id/emailSignInButton"
+                android:background="@color/colorAccent"
+                android:layout_width="match_parent"
+                android:layout_marginLeft="24dp"
+                android:layout_marginRight="24dp"
+                android:textColor="@color/brightText"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
+                android:text="@string/sign_in" />
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:id="@+id/createToggleContainer"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal"
+            android:layout_marginBottom="6dp"
+            android:gravity="center_horizontal">
+        <TextView
+                android:layout_width="wrap_content"
+                android:textColor="@color/dullText"
+                android:alpha="100"
+                android:layout_height="wrap_content"
+                android:text="Don't have an account?  " />
+
+        <TextView
+                android:id="@+id/emailCreateAccountButton"
+                android:layout_width="wrap_content"
+                android:textColor="@color/brightText"
+                android:layout_height="wrap_content"
+                android:text="@string/create_account" />
 
     </LinearLayout>
 
+    <TextView
+            android:layout_width="wrap_content"
+            android:id="@+id/forgotPassword"
+            android:textColor="@color/dullText"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="12dp"
+            android:text="@string/forgot_password" />
 
-    <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:background="@color/grey_300"
-            android:gravity="center_vertical">
-
-        <LinearLayout
-                android:id="@+id/emailPasswordFields"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp">
-
-            <EditText
-                    android:id="@+id/fieldEmail"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:hint="@string/hint_email"
-                    android:inputType="textEmailAddress" />
-
-            <EditText
-                    android:id="@+id/fieldPassword"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:hint="@string/hint_password"
-                    android:inputType="textPassword" />
-        </LinearLayout>
-
-        <LinearLayout
-                android:id="@+id/emailPasswordButtons"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/emailPasswordFields"
-                android:orientation="horizontal"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp">
-
-            <Button
-                    android:id="@+id/emailSignInButton"
-                    style="@style/Widget.AppCompat.Button.Colored"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/sign_in" />
-
-            <Button
-                    android:id="@+id/emailCreateAccountButton"
-                    style="@style/Widget.AppCompat.Button.Colored"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/create_account" />
-        </LinearLayout>
-
-    </RelativeLayout>
 
 </LinearLayout>
